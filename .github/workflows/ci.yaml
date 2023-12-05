@@ -70,13 +70,13 @@ jobs:
           environment-file: environment.yaml
           create-args: python=${{ matrix.python-version }}
       - name: Install ufs2arco
-        shell: powershell {0}
+        shell: powershell -l {0}
         run: |
           python -V
           python -c "import setuptools; print(setuptools.__version__)"
           python -m pip install -e . --no-deps
       - name: Run Unit Tests
-        shell: powershell {0}
+        shell: powershell -l {0}
         run: |
           python -V
           coverage run --rcfile=coverage.toml -m pytest --verbose
