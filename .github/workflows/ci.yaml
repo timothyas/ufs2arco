@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        os: ["ubuntu-latest", "macos-latest"]
         python-version: ["3.11"]
     steps:
       - uses: actions/checkout@v3
@@ -36,7 +36,7 @@ jobs:
           environment-file: environment.yaml
           create-args: python=${{ matrix.python-version }}
       - name: Install ufs2arco
-        shell: micromamba-shell {0}
+        shell: bash -l {0}
         run: |
           python -V
           python -c "import setuptools; print(setuptools.__version__)"
@@ -48,5 +48,39 @@ jobs:
           coverage run --rcfile=coverage.toml -m pytest --verbose
       - name: Get coverage report
         shell: bash -l {0}
+        run: |
+          coverage report -m ; coverage xml
+
+  windows-build:
+    name: Build (${{ matrix.python-version }} | ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["windows-latest"]
+        python-version: ["3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Create conda environment
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          cache-downloads: true
+          cache-environment: true
+          micromamba-version: "latest"
+          environment-file: environment.yaml
+          create-args: python=${{ matrix.python-version }}
+      - name: Install ufs2arco
+        shell: powershell {0}
+        run: |
+          python -V
+          python -c "import setuptools; print(setuptools.__version__)"
+          python -m pip install -e . --no-deps
+      - name: Run Unit Tests
+        shell: powershell {0}
+        run: |
+          python -V
+          coverage run --rcfile=coverage.toml -m pytest --verbose
+      - name: Get coverage report
+        shell: powershell {0}
         run: |
           coverage report -m ; coverage xml
