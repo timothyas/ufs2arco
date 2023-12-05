@@ -5,16 +5,16 @@
 
 name: CI
 on:
-  push:
-    branches:
-      - "*"
-  pull_request:
-    branches:
-      - "*"
+  workflow_dispatch:
+    logLevel:
+      options:
+        - info
+        - warning
+        - debug
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+          #concurrency:
+          #  group: ${{ github.workflow }}-${{ github.ref }}
+          #  cancel-in-progress: true
 
 jobs:
   build:
