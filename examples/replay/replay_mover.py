@@ -137,6 +137,7 @@ class ReplayMover1Degree():
 
         walltime = Timer()
         localtime = Timer()
+        walltime.start()
 
         store_coords = False # we don't need a separate coords dataset for FV3
         for cycle in self.my_cycles(job_id):
@@ -180,38 +181,33 @@ class ReplayMover1Degree():
         if isdir(self.cache_storage(job_id)):
             rmtree(self.cache_storage(job_id), ignore_errors=True)
 
-
-    def store_container(self):
-        """Create an empty container that has the write shape, chunks, and dtype for each variable
-        """
+    def create_container(self, ufsdataset, new_time):
+        """Create a container from an example dataset"""
 
         localtime = Timer()
 
-        replay = FV3Dataset(path_in=self.cached_path, config_filename=self.config_filename)
-
         localtime.start("Reading Single Dataset")
         cycle = self.my_cycles(0)[0]
-        xds = replay.open_dataset(cycle, **self.ods_kwargs(0))
+        xds = ufsdataset.open_dataset(cycle, **self.ods_kwargs(0))
         xds = xds.reset_coords()
         localtime.stop()
 
         xds = xds.drop(["ftime", "cftime"])
-        data_vars = [x for x in replay.data_vars if x in xds]
+        data_vars = [x for x in ufsdataset.data_vars if x in xds]
         xds = xds[data_vars]
 
-        # Make a container, starting with coordinates
         single = self.remove_time(xds)
         dds = xr.Dataset()
         for key in single.coords:
             dds[key] = xds[key]
 
         localtime.start("Making container for the dataset")
-        dds["time"] = self.xtime
-        dds = self.add_time_coords(dds, replay._time2cftime)
+        dds["time"] = new_time
+        dds = self.add_time_coords(dds, ufsdataset._time2cftime)
         for key in single.data_vars:
 
             dims = ("time",) + single[key].dims
-            chunks = tuple(replay.chunks_out[k] for k in dims)
+            chunks = tuple(ufsdataset.chunks_out[k] for k in dims)
             shape = (len(dds["time"]),) + single[key].shape
 
             dds[key] = xr.DataArray(
@@ -228,16 +224,26 @@ class ReplayMover1Degree():
 
         localtime.stop()
 
+        return dds
+
+
+    def store_container(self):
+        """Create an empty container that has the write shape, chunks, and dtype for each variable
+        """
+
+        localtime = Timer()
+
+        replay = FV3Dataset(path_in=self.cached_path, config_filename=self.config_filename)
+        dds = self.create_container(ufsdataset=replay, new_time=self.xtime)
+
         localtime.start("Storing to zarr")
         store = NestedDirectoryStore(path=replay.data_path) if replay.is_nested else replay.data_path
         dds.to_zarr(store, compute=False, storage_options=self.storage_options)
         localtime.stop()
 
         # This is a hacky way to clear the cache, since we don't create a filesystem object
-        del xds
         if isdir(self.cache_storage(0)):
             rmtree(self.cache_storage(0), ignore_errors=True)
-
 
 
     @staticmethod
