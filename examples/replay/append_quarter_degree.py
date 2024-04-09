@@ -69,9 +69,8 @@ if __name__ == "__main__":
     localtime.stop()
 
     localtime.start("Run slurm jobs")
-    for job_id in [appender.n_jobs-1]: #range(appender.n_jobs):
-    #    submit_slurm_appender(job_id, appender)
-        appender.run(job_id)
+    for job_id in range(appender.n_jobs):
+        submit_slurm_appender(job_id, appender)
     localtime.stop()
 
     walltime.stop("Walltime Time")

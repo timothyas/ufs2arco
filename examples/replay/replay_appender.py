@@ -57,6 +57,7 @@ class ReplayAppenderQuarterDegree(ReplayMoverQuarterDegree):
         dds.to_zarr(store, compute=False, storage_options=self.storage_options, append_dim="time")
         localtime.stop()
 
+        del dds
         if isdir(self.cache_storage(0)):
             rmtree(self.cache_storage(0), ignore_errors=True)
 

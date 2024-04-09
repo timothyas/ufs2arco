@@ -242,6 +242,7 @@ class ReplayMover1Degree():
         localtime.stop()
 
         # This is a hacky way to clear the cache, since we don't create a filesystem object
+        del dds
         if isdir(self.cache_storage(0)):
             rmtree(self.cache_storage(0), ignore_errors=True)
 
