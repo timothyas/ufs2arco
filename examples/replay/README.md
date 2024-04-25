@@ -357,3 +357,38 @@ ds.to_zarr(
     },
 )
 ```
+
+### Moving stuff
+
+In order to move
+`gs://noaa-ufs-gefsv13replay/ufs-hr1/0.25-degree-subsampled/03h-freq/zarr`
+to
+`gs://noaa-ufs-gefsv13replay/ufs-hr1/0.25-degree-subsampled/03h-freq/zarr/fv3.zarr`
+
+I had a lot of trouble using `gcloud` and was unable to do this using `gcsfs`.
+So I did the following with `gsutil`:
+
+1. Activate Service account
+
+```
+gcloud auth activate-service-account --key-file=/path/to/service-account.json
+```
+
+1.2 Maybe you have to create `~/.boto` with this? I'm not sure
+
+```
+[Credentials]
+/path/to/service-account.json
+```
+
+2. Move number 1 (`-m` means multiprocess/thread)
+
+```
+gsutil -m mv "gs://noaa-ufs-gefsv13replay/ufs-hr1/0.25-degree-subsampled/03h-freq/zarr/*" gs://noaa-ufs-gefsv13replay/ufs-hr1/0.25-degree-subsampled/03h-freq/fv3.zarr
+```
+
+3. Move number 2
+
+```
+gsutil -m mv gs://noaa-ufs-gefsv13replay/ufs-hr1/0.25-degree-subsampled/03h-freq/fv3.zarr gs://noaa-ufs-gefsv13replay/ufs-hr1/0.25-degree-subsampled/03h-freq/zarr/fv3.zarr
+```
