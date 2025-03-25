@@ -207,6 +207,5 @@ class Driver:
             # just in case
             zarr.consolidate_metadata(target.store_path)
         topo.barrier()
-        logger.info(f"Done storing global attributes\n")
 
         logger.info(f"🚀🚀🚀 Dataset is ready for launch at: {target.store_path}")
